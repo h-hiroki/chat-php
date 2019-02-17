@@ -10,13 +10,16 @@ class Chat implements MessageComponentInterface {
         $this->clients = new \SplObjectStorage;
     }
 
+    // 最初に接続された時の処理
     public function onOpen(ConnectionInterface $conn) {
         // Store the new connection to send messages to later
+
         $this->clients->attach($conn);
 
         echo "New connection! ({$conn->resourceId})\n";
     }
 
+    // メッセージが送信された時の処理
     public function onMessage(ConnectionInterface $from, $msg) {
         $numRecv = count($this->clients) - 1;
         echo sprintf('Connection %d sending message "%s" to %d other connection%s' . "\n"
@@ -30,6 +33,7 @@ class Chat implements MessageComponentInterface {
         }
     }
 
+    // 切断時の処理
     public function onClose(ConnectionInterface $conn) {
         // The connection is closed, remove it, as we can no longer send it messages
         $this->clients->detach($conn);
@@ -37,6 +41,7 @@ class Chat implements MessageComponentInterface {
         echo "Connection {$conn->resourceId} has disconnected\n";
     }
 
+    // エラーが発生した場合の処理
     public function onError(ConnectionInterface $conn, \Exception $e) {
         echo "An error has occurred: {$e->getMessage()}\n";
 

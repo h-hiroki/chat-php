@@ -1,22 +1,61 @@
 <!DOCTYPE html>
-<html lang='en'>
-<head>
-    <meta charset='UTF-8'>
-    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-    <meta http-equiv='X-UA-Compatible' content='ie=edge'>
-    <title>Document</title>
-</head>
-<script>
-var conn = new WebSocket('ws://localhost:8080');
-conn.onopen = function(e) {
-    console.log("Connection established!");
-};
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>web socket</title>
+    </head>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <body>
+    <input type="text" id="msg_input" style="width:200px;">
+    <button onclick="publishMessage();">語る</button>
+    <input type="text" id="typing" style="width:200px;">
+    <div id="msg"></div>
+    <script>
+        // 初期化
+        var msgArea = document.querySelector("#msg");
+        var myName = Math.floor(Math.random()*100) + "さん";
+        addMessage("あなたは" + myName + "として入室しました");
+        var typingToken = "nxiywHBDKJBUh7823r2n?"
 
-conn.onmessage = function(e) {
-    console.log(e.data);
-};
-</script>
+        // WebSocket接続する
+        var conn = new WebSocket('ws://localhost:8080');
+        // Websocket接続が完了した場合にログを残す
+        conn.onopen = function(e) {
+            console.log("Connection established!");
+        };
+        // Websocketにてmessageが更新されたらメッセージを表示する
+        conn.onmessage = function(e) {
+            addMessage(e.data);
+        };
 
-<body>
-</body>
+        $(document).ready(function(){
+            $('#msg_input').keyup(function() {
+                var msg = $('#msg_input').val()
+                if (msg.length > 0) {
+                    conn.send(typingToken + myName);
+                }
+            });
+        });
+
+        // メッセージ送信
+        function publishMessage() {
+            var textInput = document.querySelector("#msg_input");
+            conn.send(textInput.value);
+            addMessage(textInput.value);
+            textInput.value = "";
+        }
+
+        // 自身の送信時やサーバ側から受信した際のメッセージを表示する
+        function addMessage(msg){
+            if (msg.indexOf(typingToken) != -1) {
+                $('#typing').val("だれか入力中ですよ");
+            }
+
+            var domMsg = document.createElement("div");
+            domMsg.innerHTML = new Date().toLocaleTimeString() + " " + msg;
+            msgArea.appendChild(domMsg);
+        }
+
+    </script>
+    </body>
 </html>
