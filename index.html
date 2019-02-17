@@ -8,13 +8,13 @@
     <body>
     <input type="text" id="msg_input" style="width:200px;">
     <button onclick="publishMessage();">語る</button>
-    <input type="text" id="typing" style="width:200px;">
+    <input type="text" id="typing" disabled="disabled" style="width:200px;">
     <div id="msg"></div>
     <script>
         // 初期化
         var msgArea = document.querySelector("#msg");
-        var myName = Math.floor(Math.random()*100) + "さん";
-        addMessage("あなたは" + myName + "として入室しました");
+        var myName = Math.floor(Math.random()*100);
+        addMessage("あなたは" + myName + "さんとして入室しました");
         var typingToken = "nxiywHBDKJBUh7823r2n?"
 
         // WebSocket接続する
@@ -25,9 +25,20 @@
         };
         // Websocketにてmessageが更新されたらメッセージを表示する
         conn.onmessage = function(e) {
+            // tokenを含むメッセージならメッセージ入力はさせない
+            tmp = e.data;
+            if (tmp.indexOf("nxiywHBDKJBUh7823r2n?") >= 0) {
+                tmp = tmp.replace("nxiywHBDKJBUh7823r2n?", "")
+                $('#typing').val(tmp + "さんが入力中");
+                return;
+            }
+
+            // 上記ガードを抜けた場合はメッセージを表示する
             addMessage(e.data);
+            $('#typing').val("");
         };
 
+        // 入力判定
         $(document).ready(function(){
             $('#msg_input').keyup(function() {
                 var msg = $('#msg_input').val()
@@ -47,10 +58,6 @@
 
         // 自身の送信時やサーバ側から受信した際のメッセージを表示する
         function addMessage(msg){
-            if (msg.indexOf(typingToken) != -1) {
-                $('#typing').val("だれか入力中ですよ");
-            }
-
             var domMsg = document.createElement("div");
             domMsg.innerHTML = new Date().toLocaleTimeString() + " " + msg;
             msgArea.appendChild(domMsg);
